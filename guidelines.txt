@@ -1,0 +1,23 @@
+Introduction
+------------
+Hi, this exercise is an 'open-book' exercise that you can research via the web and extend as to like (in as much time as you like) in order to show your product/application development skills. It's not all about the code, there are instructions in the code that encourage you to technically extend the coding challenges you can take on... you should consider some of these. From an application/product point of view, you should also consider the presentation of this exercise from a deliverable perspective and what you would expect from a software delivery. 
+
+Packaging 
+---------
+Think about how the deliverable is going to be packaged, is it structured, does it have all the artefacts you would expect to see in an application or library like this? 
+
+Tooling
+-------
+Remember, someone is going to not only review the code, they are going to run the solution and check the results, have you made this easy to do? Have you provided any tooling that enables this?
+
+Test Framework
+--------------
+Is there test framework(s) delivered as part of the deliverable? How extensive is the coverage? Are there sunny day as well as negative test cases? Is it easily understood from the test case names or structrure? 
+
+Logging
+------
+Again, remember another developer is going to read and run your code, if you added a bunch of logging so you could see what was happening during development, then it's probably going to be useful to another developer. Did you go the extra yard and put in a configurable logging framework? 
+
+Documentation
+-------------
+No product is complete without documentation, think what is going to be useful to the end user and help them get started with your product. A README.txt is fine, but remember to cover all aspects you want to convey. 
