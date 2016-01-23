@@ -27,7 +27,8 @@ public class DemoApplicationTests {
 
 		// Test Case
 		// 初始化5个连接的连接池，连续获取5个连接，第六个连接会返回null，
-		// 然后将第五个连接释放掉，便能再次获取连接，并且这次获取的连接和第五次获取的连接是一个对象
+		// 然后将第五个连接释放掉，便能再次获取连接
+		// Connection的testConnection随机返回该Connection是否可用
 		ConnectionPool cp5 = makeConnectionPool(5);
 		assertNotNull(cp5.getConnection(1, TimeUnit.SECONDS));
 		assertNotNull(cp5.getConnection(1, TimeUnit.SECONDS));
@@ -45,7 +46,6 @@ public class DemoApplicationTests {
 		Connection connection5r = cp5.getConnection(1, TimeUnit.SECONDS);
 
 		assertNotNull(connection5r);
-		assertEquals(connection5r, connection5);
 		
 	}
 
