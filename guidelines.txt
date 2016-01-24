@@ -11,9 +11,9 @@ Tooling
 Remember, someone is going to not only review the code, they are going to run the solution and check the results, have you made this easy to do? Have you provided any tooling that enables this?
 
 Test Framework
---------------
+-------------- 
 Is there test framework(s) delivered as part of the deliverable? How extensive is the coverage? Are there sunny day as well as negative test cases? Is it easily understood from the test case names or structrure? 
-
+   
 Logging
 ------
 Again, remember another developer is going to read and run your code, if you added a bunch of logging so you could see what was happening during development, then it's probably going to be useful to another developer. Did you go the extra yard and put in a configurable logging framework? 
