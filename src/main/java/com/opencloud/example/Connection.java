@@ -9,7 +9,7 @@ public interface Connection {
     /**
      * Test to see if this connection is still valid.
      *
-     * @return true iff this connection is still valid.
+     * @return true if this connection is still valid.
      */
     public boolean testConnection();
 }

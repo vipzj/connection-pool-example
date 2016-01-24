@@ -7,36 +7,29 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.apache.log4j.Logger;
 
 /**
  * Connection pool implementation.
  *
- * This implementation should:
+ * This implementation class can:
  *
  * - Use the provided ConnectionFactory implementation to build new Connection
- * objects. - Allow up to {@code maxConnections} simultaneous connections (both
- * in-use and idle) - Call Connection.testConnection() before returning a
+ * objects. 
+ * - Allow up to {@code maxConnections} simultaneous connections (both
+ * in-use and idle) 
+ * - Call Connection.testConnection() before returning a
  * Connection to a caller; if testConnection() returns false, this Connection
- * instance should be discarded and a different Connection obtained. - Be safe
- * to use by multiple callers simultaneously from different threads
- *
- * You may find the locking and queuing objects provided by java.util.concurrent
- * useful.
- *
- * Some possible extensions:
- *
+ * instance should be discarded and a different Connection obtained. 
+ * - Be safe to use by multiple callers simultaneously from different threads.
  * - Check that connections returned via releaseConnection() were actually
- * allocated via getConnection() (and haven't already been returned) - Test idle
- * connections periodically, and discard those which fail a testConnection()
- * check. - Detect Connections that have been handed out to a caller, but where
- * the caller has discarded the Connection object, and don't count them as
- * "in use". (hint: have the pool store WeakReferences to in-use connections,
- * and use that to detect when they become only weakly reachable)
- *
+ * allocated via getConnection() (and haven't already been returned).  
  */
 public class ConnectionPoolImpl implements ConnectionPool {
 
 	private GenericObjectPool<Connection> genericObjectPool;
+
+	private static Logger logger = Logger.getLogger(ConnectionPoolImpl.class);
 
 	/**
 	 * Construct a new pool that uses a provided factory to construct
@@ -56,7 +49,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
 		config.setTestOnBorrow(true);
 		config.setTestOnCreate(false);
 		config.setTestOnReturn(false);
-
+		
 		genericObjectPool = new GenericObjectPool<Connection>(
 				new BasePooledObjectFactory<Connection>() {
 
@@ -73,28 +66,46 @@ public class ConnectionPoolImpl implements ConnectionPool {
 					@Override
 					public boolean validateObject(PooledObject<Connection> p) {
 						boolean test = p.getObject().testConnection();
-						System.out.println(test);
+						logger.debug("Connection validation:" + test);
 						return test;
 					}
 
 				}, config);
+		logger.info("Pool is ready and max connection is "+ maxConnections);
 	}
 
+	/**
+	 * Retrieve a connection from the pool.
+	 * @param delay the timeout; if <=0, do not wait for a connection
+     *              if none are immediately available.
+     * @param units the time unit of the timeout delay
+     * @return a new Connection, or {@code null} if no connection was available
+	 */
 	public Connection getConnection(long delay, TimeUnit units) {
 
 		try {
 			Connection c = null;
-			long startTime = System.currentTimeMillis();
+			delay = units.toMillis(delay);
+			long startTime = System.currentTimeMillis();	
 			while(c == null){
-				if(System.currentTimeMillis() - startTime > delay*1000)
+				if(delay>0&&System.currentTimeMillis() - startTime > delay)
 					return null;
-				try {
-					c = genericObjectPool.borrowObject(delay);
+				if(delay<=0&&System.currentTimeMillis() - startTime > 1000)
+					return null;
+				try {	
+					if(delay>0){
+						genericObjectPool.setBlockWhenExhausted(true);
+						c = genericObjectPool.borrowObject(delay);
+					}else{
+						genericObjectPool.setBlockWhenExhausted(false);
+						c = genericObjectPool.borrowObject();
+					}
 				} catch (Exception e) {
 					// TODO: handle exception
 				}
+				
 			}
-			
+			logger.debug("Connection:" + c);
 			return c;
 		} catch (Exception e) {
 			return null;
@@ -102,8 +113,14 @@ public class ConnectionPoolImpl implements ConnectionPool {
 
 	}
 
+    /**
+     * Return a previously retrieved connection to the pool.
+     *
+     * @param connection the connection to return
+     */
 	public void releaseConnection(Connection connection) {
 		// Your implementation here.
 		genericObjectPool.returnObject(connection);
+		logger.debug("Released connection:" + connection);
 	}
 }
