@@ -7,10 +7,6 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.example.DemoApplication;
 
 /**
  * Connection pool implementation.
@@ -57,7 +53,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
 		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
 
 		config.setMaxTotal(maxConnections);
-		config.setTestOnBorrow(true);    
+		config.setTestOnBorrow(true);
 
 		genericObjectPool = new GenericObjectPool<Connection>(
 				new BasePooledObjectFactory<Connection>() {
@@ -86,11 +82,25 @@ public class ConnectionPoolImpl implements ConnectionPool {
 		try {
 			if (delay <= 0) {
 				genericObjectPool.setBlockWhenExhausted(false);
-				return genericObjectPool.borrowObject();
+				Connection conn = genericObjectPool.borrowObject();
+				long startTime = System.currentTimeMillis();
+				long endTime = 0;
+				while(null == conn&&(endTime-startTime)<=1000){
+					conn = genericObjectPool.borrowObject();
+					endTime = System.currentTimeMillis();
+				}
+				return conn;
 			} else {
 				genericObjectPool.setBlockWhenExhausted(true);
 				delay = units.toMillis(delay);
-				return genericObjectPool.borrowObject(delay);
+				Connection conn = genericObjectPool.borrowObject(delay);
+				long startTime = System.currentTimeMillis();
+				long endTime = 0;
+				while(null == conn&&(endTime-startTime)<=1000){
+					conn = genericObjectPool.borrowObject(delay);
+					endTime = System.currentTimeMillis();
+				}
+				return conn;
 			}
 		} catch (Exception e) {
 			return null;
