@@ -7,6 +7,10 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.example.DemoApplication;
 
 /**
  * Connection pool implementation.
@@ -49,44 +53,49 @@ public class ConnectionPoolImpl implements ConnectionPool {
 	 *            the number of simultaneous connections to allow
 	 */
 	public ConnectionPoolImpl(ConnectionFactory factory, int maxConnections) {
-		// Your implementation here.
 
 		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
 
 		config.setMaxTotal(maxConnections);
-		config.setTestOnBorrow(true);
-		// config.setTestOnCreate(true);
-		// config.setTestOnReturn(true);
+		config.setTestOnBorrow(true);    
 
-		genericObjectPool = new GenericObjectPool<Connection>(new BasePooledObjectFactory<Connection>() {
+		genericObjectPool = new GenericObjectPool<Connection>(
+				new BasePooledObjectFactory<Connection>() {
 
-			@Override
-			public Connection create() throws Exception {
-				return factory.newConnection();
-			}
+					@Override
+					public Connection create() throws Exception {
+						return factory.newConnection();
+					}
 
-			@Override
-			public PooledObject<Connection> wrap(Connection obj) {
-				return new DefaultPooledObject<Connection>(obj);
-			}
+					@Override
+					public PooledObject<Connection> wrap(Connection obj) {
+						return new DefaultPooledObject<Connection>(obj);
+					}
 
-			@Override
-			public boolean validateObject(PooledObject<Connection> p) {
-				boolean test = p.getObject().testConnection();
-				return test;
-			}
+					@Override
+					public boolean validateObject(PooledObject<Connection> p) {
+						boolean test = p.getObject().testConnection();
+						return test;
+					}
 
-		}, config);
+				}, config);
 	}
 
 	public Connection getConnection(long delay, TimeUnit units) {
-		// Your implementation here.
+
 		try {
-			return genericObjectPool.borrowObject(delay);
+			if (delay <= 0) {
+				genericObjectPool.setBlockWhenExhausted(false);
+				return genericObjectPool.borrowObject();
+			} else {
+				genericObjectPool.setBlockWhenExhausted(true);
+				delay = units.toMillis(delay);
+				return genericObjectPool.borrowObject(delay);
+			}
 		} catch (Exception e) {
-			// TODO
 			return null;
 		}
+
 	}
 
 	public void releaseConnection(Connection connection) {
