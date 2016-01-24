@@ -41,7 +41,7 @@ import com.example.DemoApplication;
 public class ConnectionPoolImpl implements ConnectionPool {
 
 	private GenericObjectPool<Connection> genericObjectPool;
-	
+
 	/**
 	 * Construct a new pool that uses a provided factory to construct
 	 * connections, and allows a given maximum number of connections
@@ -53,12 +53,12 @@ public class ConnectionPoolImpl implements ConnectionPool {
 	 *            the number of simultaneous connections to allow
 	 */
 	public ConnectionPoolImpl(ConnectionFactory factory, int maxConnections) {
-		
+
 		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
 
 		config.setMaxTotal(maxConnections);
 		config.setTestOnBorrow(true);
-		
+
 		genericObjectPool = new GenericObjectPool<Connection>(
 				new BasePooledObjectFactory<Connection>() {
 
@@ -71,24 +71,31 @@ public class ConnectionPoolImpl implements ConnectionPool {
 					public PooledObject<Connection> wrap(Connection obj) {
 						return new DefaultPooledObject<Connection>(obj);
 					}
-				}, config);		
+
+					@Override
+					public boolean validateObject(PooledObject<Connection> p) {
+						boolean test = p.getObject().testConnection();
+						return test;
+					}
+
+				}, config);
 	}
 
 	public Connection getConnection(long delay, TimeUnit units) {
-	
+
 		try {
-			if(delay<=0){
+			if (delay <= 0) {
 				genericObjectPool.setBlockWhenExhausted(false);
 				return genericObjectPool.borrowObject();
-			}else{
+			} else {
 				genericObjectPool.setBlockWhenExhausted(true);
 				delay = units.toMillis(delay);
 				return genericObjectPool.borrowObject(delay);
 			}
-		} catch (Exception e) {			
+		} catch (Exception e) {
 			return null;
 		}
-		
+
 	}
 
 	public void releaseConnection(Connection connection) {
