@@ -54,6 +54,9 @@ public class ConnectionPoolImpl implements ConnectionPool {
 		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
 
 		config.setMaxTotal(maxConnections);
+		config.setTestOnBorrow(true);
+		// config.setTestOnCreate(true);
+		// config.setTestOnReturn(true);
 
 		genericObjectPool = new GenericObjectPool<Connection>(new BasePooledObjectFactory<Connection>() {
 
@@ -66,6 +69,13 @@ public class ConnectionPoolImpl implements ConnectionPool {
 			public PooledObject<Connection> wrap(Connection obj) {
 				return new DefaultPooledObject<Connection>(obj);
 			}
+
+			@Override
+			public boolean validateObject(PooledObject<Connection> p) {
+				boolean test = p.getObject().testConnection();
+				return test;
+			}
+
 		}, config);
 	}
 
