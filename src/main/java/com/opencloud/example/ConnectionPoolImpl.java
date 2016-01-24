@@ -54,6 +54,8 @@ public class ConnectionPoolImpl implements ConnectionPool {
 
 		config.setMaxTotal(maxConnections);
 		config.setTestOnBorrow(true);
+		config.setTestOnCreate(false);
+		config.setTestOnReturn(false);
 
 		genericObjectPool = new GenericObjectPool<Connection>(
 				new BasePooledObjectFactory<Connection>() {
@@ -71,6 +73,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
 					@Override
 					public boolean validateObject(PooledObject<Connection> p) {
 						boolean test = p.getObject().testConnection();
+						System.out.println(test);
 						return test;
 					}
 
@@ -80,28 +83,19 @@ public class ConnectionPoolImpl implements ConnectionPool {
 	public Connection getConnection(long delay, TimeUnit units) {
 
 		try {
-			if (delay <= 0) {
-				genericObjectPool.setBlockWhenExhausted(false);
-				Connection conn = genericObjectPool.borrowObject();
-				long startTime = System.currentTimeMillis();
-				long endTime = 0;
-				while(null == conn&&(endTime-startTime)<=1000){
-					conn = genericObjectPool.borrowObject();
-					endTime = System.currentTimeMillis();
+			Connection c = null;
+			long startTime = System.currentTimeMillis();
+			while(c == null){
+				if(System.currentTimeMillis() - startTime > delay*1000)
+					return null;
+				try {
+					c = genericObjectPool.borrowObject(delay);
+				} catch (Exception e) {
+					// TODO: handle exception
 				}
-				return conn;
-			} else {
-				genericObjectPool.setBlockWhenExhausted(true);
-				delay = units.toMillis(delay);
-				Connection conn = genericObjectPool.borrowObject(delay);
-				long startTime = System.currentTimeMillis();
-				long endTime = 0;
-				while(null == conn&&(endTime-startTime)<=1000){
-					conn = genericObjectPool.borrowObject(delay);
-					endTime = System.currentTimeMillis();
-				}
-				return conn;
 			}
+			
+			return c;
 		} catch (Exception e) {
 			return null;
 		}
