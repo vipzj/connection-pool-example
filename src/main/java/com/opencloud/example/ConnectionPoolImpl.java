@@ -57,7 +57,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
 		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
 
 		config.setMaxTotal(maxConnections);
-		config.setTestOnBorrow(true);
+		config.setTestOnBorrow(true);    
 
 		genericObjectPool = new GenericObjectPool<Connection>(
 				new BasePooledObjectFactory<Connection>() {
